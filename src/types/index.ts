@@ -17,7 +17,15 @@ export interface INotification {
 }
 
 export interface IArtist {
+    spotifyId: string;
+    name: string;
+    genres: string[];
     albums: IAlbum[];
+    popularity: number;
+    images: ISpotifyImage[];
+    externalUrl: {
+        spotify: string;
+    };
 }
 
 export interface IAlbum {
