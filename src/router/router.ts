@@ -18,7 +18,6 @@ import { checkUserExists } from "@/functions/checkUserExists";
 import { editProfile } from "@/functions/editProfile";
 import { getUserProfile } from "@/functions/user/getUserProfile";
 
-// Auth0 configuration
 const authConfig = {
     authRequired: false,
     auth0Logout: true,
@@ -34,8 +33,8 @@ const authConfig = {
         callback: '/auth/callback'
     },
     session: {
-        rollingDuration: 24 * 60 * 60, // 24 hours
-        absoluteDuration: 7 * 24 * 60 * 60 // 7 days
+        rollingDuration: 24 * 60 * 60,
+        absoluteDuration: 7 * 24 * 60 * 60 
     }
 };
 
