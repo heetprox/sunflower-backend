@@ -1,10 +1,7 @@
 import { Router } from "express";
-import type { Request, Response } from "express";
-import { spotifyService } from "@/lib/spotify";
-import { asyncHandler } from "@/handlers/errorHandler";
-import { getCallback } from "@/functions/getCallback";
-import { authenticate } from "@/middleware/auth";
-import { getProfile } from "@/functions/spotify/getProfile";
+import type { Request, Response, NextFunction } from "express";
+import { auth, requiresAuth } from "express-openid-connect";
+import { asyncHandler, isAuthenticated } from "@/handlers/errorHandler";
 import { setUsername } from "@/functions/setUsername";
 import { checkOnboarding } from "@/functions/checkOnboarding";
 import { sendFriendRequest } from "@/functions/sendFriendRequest";
@@ -14,63 +11,112 @@ import { getFriends } from "@/functions/getFriends";
 import { getFriendRequests } from "@/functions/getFriendRequests";
 import { removeFriend } from "@/functions/removeFriend";
 import { searchUsers } from "@/functions/searchUsers";
-import { getLogout } from "@/functions/getLogout";
 import { getMessages } from "@/functions/socket/getMessages";
 import { getUsersToChat } from "@/functions/socket/getUsersToChat";
 import { sendMessage } from "@/functions/socket/sendMessage";
-import { syncSpotifyData } from "@/functions/spotify/syncSpotifyData";
-import { getMusicProfile } from "@/functions/spotify/getMusicProfile";
-import { getTopArtists } from "@/functions/spotify/getTopArtists";
-import { getTopTracks } from "@/functions/spotify/getTopTracks";
-import { getRecentTracks } from "@/functions/spotify/getRecentTracks";
-import { getPlaylists } from "@/functions/spotify/getPlaylists";
-import { getCurrentTrack } from "@/functions/spotify/getCurrentTrack";
-import { getTopGenres } from "@/functions/spotify/getTopGenres";
-import { getAudioFeatures } from "@/functions/spotify/getAudioFeatures";
 import { checkUserExists } from "@/functions/checkUserExists";
 import { editProfile } from "@/functions/editProfile";
 import { getUserProfile } from "@/functions/user/getUserProfile";
-import { getMyProfile } from "@/functions/spotify/getMyProfile";
+
+// Auth0 configuration
+const authConfig = {
+    authRequired: false,
+    auth0Logout: true,
+    secret: process.env.AUTH0_SECRET || 'a-long-randomly-generated-string-stored-in-env',
+    baseURL: process.env.AUTH0_BASE_URL || 'http://localhost:3000',
+    clientID: process.env.AUTH0_CLIENT_ID || '8XTdDEi85au9S5QbO04cVVWL4jokIT8G',
+    issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL || 'https://dev-e0f8moytylh81hai.us.auth0.com',
+    clientSecret: process.env.AUTH0_CLIENT_SECRET,
+    idpLogout: true,
+    routes: {
+        login: '/auth/login',
+        logout: '/auth/logout',
+        callback: '/auth/callback'
+    },
+    session: {
+        rollingDuration: 24 * 60 * 60, // 24 hours
+        absoluteDuration: 7 * 24 * 60 * 60 // 7 days
+    }
+};
+
+
 
 const router = Router();
-const spotify = new spotifyService();
 
-router.get('/spotify/login', (req, res) => {
-    const authUrl = spotify.getAuthUrl();
-    res.redirect(authUrl);
+router.use(auth(authConfig));
+
+router.get('/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-router.post('/logout', asyncHandler(getLogout));
-router.get('/spotify/callback', asyncHandler(getCallback));
-router.get('/profile/me', authenticate, asyncHandler(getProfile));
-router.get('/profile/:id', authenticate, asyncHandler(getUserProfile));
-router.get('/auth/check', authenticate, asyncHandler(checkUserExists));
-router.post('/username', authenticate, asyncHandler(setUsername));
-router.post('/profile/edit', authenticate, asyncHandler(editProfile));
-router.get('/onboarding', authenticate, asyncHandler(checkOnboarding));
-router.get('/messages/users', authenticate, asyncHandler(getUsersToChat));
-router.get('/messages/:id', authenticate, asyncHandler(getMessages));
-router.post('/messages/send/:id', authenticate, asyncHandler(sendMessage));
-router.get('/spotify/sync', authenticate, asyncHandler(syncSpotifyData));
-router.get('/spotify/profile', authenticate, asyncHandler(getMyProfile));
-router.get('/spotify/profile/:id', authenticate, asyncHandler(getMusicProfile));
-// router.get('/spotify/top-artists', authenticate, asyncHandler(getTopArtists));
-// router.get('/spotify/top-tracks', authenticate, asyncHandler(getTopTracks));
-// router.get('/spotify/recent-tracks', authenticate, asyncHandler(getRecentTracks));
-// router.get('/spotify/playlists', authenticate, asyncHandler(getPlaylists));
-// router.get('/spotify/current-track', authenticate, asyncHandler(getCurrentTrack));
-// router.get('/spotify/top-genres', authenticate, asyncHandler(getTopGenres));
-// router.get('/spotify/audio-features', authenticate, asyncHandler(getAudioFeatures));
-// router.get('/health', (req, res) => {
-//     res.json({ status: 'OK', timestamp: new Date().toISOString() });
-// });
-router.get('/friends', authenticate, asyncHandler(getFriends));
-router.get('/search', authenticate, asyncHandler(searchUsers));
-router.get('/requests', authenticate, asyncHandler(getFriendRequests));
-router.post('/request/:id', authenticate, asyncHandler(sendFriendRequest));
+// Auth routes
+router.get('/auth/login/google', (req: any, res: any) => {
+    req.oidc.login({
+        authorizationParams: {
+            connection: 'google-oauth2',
+            scope: 'openid profile email'
+        }
+    });
+});
 
-router.put('/request/:requestId/accept', authenticate, asyncHandler(acceptFriendRequest));
-router.put('/request/:requestId/reject', authenticate, asyncHandler(rejectFriendRequest));
-router.delete('/:friendId', authenticate, asyncHandler(removeFriend));
+router.get('/auth/login/twitter', (req: any, res: any) => {
+    req.oidc.login({
+        authorizationParams: {
+            connection: 'twitter',
+            scope: 'openid profile email'
+        }
+    });
+});
+
+router.get('/auth/login', (req: any, res: any) => {
+    req.oidc.login({
+        returnTo: req.query.returnTo as string || '/'
+    });
+});
+
+router.get('/auth/profile', requiresAuth(), (req: any, res: any) => {
+    res.json({
+        user: req.oidc.user,
+        isAuthenticated: req.oidc.isAuthenticated()
+    });
+});
+
+router.get('/auth/status', (req: any, res: any) => {
+    res.json({
+        isAuthenticated: req.oidc.isAuthenticated(),
+        user: req.oidc.isAuthenticated() ? req.oidc.user : null
+    });
+});
+
+router.post('/logout', (req: any, res: Response) => {
+    req.oidc.logout({ returnTo: process.env.AUTH0_BASE_URL || 'http://localhost:3000' });
+});
+
+// User profile routes
+router.get('/profile/me', isAuthenticated ,(req: any, res: Response) => {
+    res.json({
+        user: req.oidc.user,
+        isAuthenticated: req.oidc.isAuthenticated()
+    });
+});
+router.get('/profile/:id', isAuthenticated, asyncHandler(getUserProfile));
+router.get('/auth/check', isAuthenticated, asyncHandler(checkUserExists));
+router.post('/username', isAuthenticated, asyncHandler(setUsername));
+router.post('/profile/edit', isAuthenticated, asyncHandler(editProfile));
+router.get('/onboarding', isAuthenticated, asyncHandler(checkOnboarding));
+
+// Messaging routes
+router.get('/messages/users', isAuthenticated, asyncHandler(getUsersToChat));
+router.get('/messages/:id', isAuthenticated, asyncHandler(getMessages));
+router.post('/messages/send/:id', isAuthenticated, asyncHandler(sendMessage));
+
+// Friend management routes
+router.get('/friends', isAuthenticated, asyncHandler(getFriends));
+router.get('/search', isAuthenticated, asyncHandler(searchUsers));
+router.get('/requests', isAuthenticated, asyncHandler(getFriendRequests));
+router.post('/request/:id', isAuthenticated, asyncHandler(sendFriendRequest));
+router.put('/request/:requestId/accept', isAuthenticated, asyncHandler(acceptFriendRequest));
+router.put('/request/:requestId/reject', isAuthenticated, asyncHandler(rejectFriendRequest));
+router.delete('/friends/:friendId', isAuthenticated, asyncHandler(removeFriend));
 
 export default router;

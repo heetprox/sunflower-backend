@@ -5,6 +5,13 @@ export interface AppError extends Error {
     isOperational?: boolean;
 }
 
+export const isAuthenticated = (req: any, res: Response, next: NextFunction) => {
+    if (req.oidc && req.oidc.isAuthenticated()) {
+        return next();
+    }
+    res.status(401).json({ error: 'Authentication required' });
+};
+
 export const errorHandler = (
     err: AppError,
     req: Request,

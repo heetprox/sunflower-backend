@@ -33,7 +33,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-openid-connect": "^2.19.2",
     "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.2",
     "express-slow-down": "^2.1.0",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
@@ -43,6 +45,8 @@
     "mongoose": "^8.15.1",
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
+    "passport": "^0.7.0",
+    "passport-auth0": "^1.4.5",
     "redis": "^5.5.6",
     "socket.io": "^4.8.1",
     "speedcast-api": "^1.0.0"
