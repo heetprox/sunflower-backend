@@ -1,13 +1,11 @@
 import { prisma } from "./prisma";
 import { config } from "@/config/config";
 
-// Test database connection
 async function connectDatabase() {
   try {
     await prisma.$connect();
     console.log('✅ Database connected successfully');
     
-    // Test the connection with a simple query
     await prisma.$queryRaw`SELECT 1`;
     console.log('✅ Database query test passed');
     

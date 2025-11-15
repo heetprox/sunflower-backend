@@ -2,7 +2,6 @@ import type { Artist } from '@/generated/prisma/client';
 import { prisma } from '../lib/prisma';
 
 export class ArtistService {
-  // Create a new artist
   static async createArtist(data: {
     spotifyId: string;
     name: string;
@@ -16,7 +15,6 @@ export class ArtistService {
     });
   }
 
-  // Get artist by ID
   static async getArtistById(id: string): Promise<Artist | null> {
     return await prisma.artist.findUnique({
       where: { id },
@@ -27,7 +25,6 @@ export class ArtistService {
     });
   }
 
-  // Get artist by Spotify ID
   static async getArtistBySpotifyId(spotifyId: string): Promise<Artist | null> {
     return await prisma.artist.findUnique({
       where: { spotifyId },
@@ -38,7 +35,6 @@ export class ArtistService {
     });
   }
 
-  // Update artist
   static async updateArtist(id: string, data: Partial<{
     name: string;
     genres: string[];
@@ -52,7 +48,6 @@ export class ArtistService {
     });
   }
 
-  // Get artists by genre
   static async getArtistsByGenre(genre: string): Promise<Artist[]> {
     return await prisma.artist.findMany({
       where: {
@@ -67,7 +62,6 @@ export class ArtistService {
     });
   }
 
-  // Search artists
   static async searchArtists(query: string): Promise<Artist[]> {
     return await prisma.artist.findMany({
       where: {
@@ -83,7 +77,6 @@ export class ArtistService {
     });
   }
 
-  // Follow/unfollow artist
   static async followArtist(userId: string, artistId: string): Promise<void> {
     await prisma.artist.update({
       where: { id: artistId },

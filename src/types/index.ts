@@ -1,6 +1,5 @@
 export interface IUser {
   username: string;
-  displayName: string;
   notifications: INotification[];
   follows: IArtist[];
    createdAt: {
