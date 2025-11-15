@@ -26,7 +26,7 @@ class EmailService {
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false, // true for 465, false for other ports
+      secure: false,
       auth: {
         user: process.env.AUTH_USER,
         pass: process.env.AUTH_PASS,
@@ -36,7 +36,6 @@ class EmailService {
       }
     });
 
-    // Verify connection configuration
     this.verifyConnection();
   }
 
