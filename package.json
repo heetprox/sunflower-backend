@@ -11,7 +11,8 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/mongoose": "^5.11.97",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^24.0.0"
+    "@types/node": "^24.0.0",
+    "@types/nodemailer": "^6.4.19"
   },
   "peerDependencies": {
     "typescript": "^5.8.3"

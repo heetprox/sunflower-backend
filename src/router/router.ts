@@ -17,6 +17,10 @@ import { sendMessage } from "@/functions/socket/sendMessage";
 import { checkUserExists } from "@/functions/checkUserExists";
 import { editProfile } from "@/functions/editProfile";
 import { getUserProfile } from "@/functions/user/getUserProfile";
+import { sendEmail, sendEmailValidation } from "@/functions/email/sendEmail";
+import { sendWelcomeEmail, sendWelcomeEmailValidation } from "@/functions/email/sendWelcomeEmail";
+import { sendTestEmail, sendTestEmailValidation } from "@/functions/email/sendTestEmail";
+import { sendNotificationEmail, sendNotificationEmailValidation } from "@/functions/email/sendNotificationEmail";
 
 const authConfig = {
     authRequired: false,
@@ -117,5 +121,11 @@ router.post('/request/:id', isAuthenticated, asyncHandler(sendFriendRequest));
 router.put('/request/:requestId/accept', isAuthenticated, asyncHandler(acceptFriendRequest));
 router.put('/request/:requestId/reject', isAuthenticated, asyncHandler(rejectFriendRequest));
 router.delete('/friends/:friendId', isAuthenticated, asyncHandler(removeFriend));
+
+// Email routes
+router.post('/email/send', isAuthenticated, sendEmailValidation, asyncHandler(sendEmail));
+router.post('/email/welcome', isAuthenticated, sendWelcomeEmailValidation, asyncHandler(sendWelcomeEmail));
+router.post('/email/test', isAuthenticated, sendTestEmailValidation, asyncHandler(sendTestEmail));
+router.post('/email/notification', isAuthenticated, sendNotificationEmailValidation, asyncHandler(sendNotificationEmail));
 
 export default router;
