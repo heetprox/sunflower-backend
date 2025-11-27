@@ -6,6 +6,8 @@ import cookieParser from 'cookie-parser';
 import useCors from "cors";
 import { cors } from './lib/utils';
 import { errorHandler } from './handlers/errorHandler';
+import { auth } from "./lib/auth";
+import { toNodeHandler } from "better-auth/node";
 
 const app = express();
 const server = http.createServer(app);
@@ -16,11 +18,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Routes
+// Debug logging
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.url}`);
+  next();
+});
+
+app.all('/api/auth/*}', toNodeHandler(auth));
+
 app.use(router);
 
-// Error handling middleware (should be last)
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found", path: req.url });
+});
+
 app.use(errorHandler);
 
-// Start server with database connection
+// Start server
 runServer(server);
