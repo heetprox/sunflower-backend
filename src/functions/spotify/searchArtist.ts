@@ -23,6 +23,7 @@ export const searchArtists = async (query: string) => {
       name: artist.name,
       image: artist.images?.[0]?.url || null,
       popularity: artist.popularity,
+      followers: artist.followers.total
     }));
   } catch (error: any) {
     console.error("Spotify Search Error:", error.response?.data || error);
