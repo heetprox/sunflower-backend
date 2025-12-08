@@ -1,5 +1,5 @@
+import { config } from "../config/config";
 import { prisma } from "./prisma";
-import { config } from "@/config/config";
 
 async function connectDatabase() {
   try {
