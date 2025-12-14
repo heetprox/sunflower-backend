@@ -9,7 +9,34 @@ import { getAllAlbum } from "@/functions/spotify/getAllAlbum";
 
 const router = Router();
 
-router.get("/api/getartist/:id", getArtistById);
+router.get("/api/getartist/:id", async (req: Request, res: Response) => {
+  try {
+    const artistId = req.params.id;
+
+    if (!artistId) {
+      return res.status(400).json({
+        success: false,
+        message: "Artist ID is required",
+        data: null
+      });
+    }
+
+    const artist = await getArtistById(artistId);
+    
+    return res.status(200).json({
+      success: true,
+      message: "Artist fetched successfully",
+      data: artist
+    });
+  } catch (error) {
+    console.error("Get artist API error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      data: null
+    });
+  }
+});
 router.get("/api/search", searchArtists);
 router.get("/api/getalbum/:id", getAlbumById);
 router.get("/api/getallalbum/:id", async (req: Request, res: Response) => {
